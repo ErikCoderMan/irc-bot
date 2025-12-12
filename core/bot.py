@@ -4,7 +4,7 @@ from random import randint
 
 # Import some modules from core
 from core.config import config
-from core.logger import log_info, log_error
+from core.logger import log_info, log_error, log_debug
 from core.storage import add_note, read_notes, wipe_notes
 
 
@@ -96,13 +96,47 @@ class IRCBot:
                 command = tokens[0][1:]
                 
                 # Commands
-                # TODO: add all commands
                 if command == "roll":
                     roll = randint(0, 100)
                     self.writer.write(
                         f"PRIVMSG {self.channel} :{user} rolled a {roll}\r\n".encode()
                     )
                     await self.writer.drain()
+                    log_info(f"[roll] {user} executed {self.cmd_prefix}roll and got {roll}")
+                
+                elif command == "note":
+                    if tokens[1]:
+                        note_mode = tokens[1]
+                        if note_mode == "read":
+                            notes = read_notes()
+                            for note in notes:
+                                self.writer.write(
+                                    f"PRIVMSG {self.channel} :{note}\r\n".encode()
+                                )
+                                await self.writer.drain()
+                            log_info(f"[note read] {user} executed {self.cmd_prefix}note read")
+                        
+                        elif note_mode == "wipe":
+                            wipe_notes()
+                            self.writer.write(
+                                f"PRIVMSG {self.channel} :Notes wiped by {user}\r\n".encode()
+                            )
+                            await self.writer.drain()
+                            log_info(f"[note wipe] {user} executed {self.cmd_prefix}note wipe")
+                        
+                        elif note_mode == "add" and len(tokens) >= 3:
+                            new_note = " ".join(tokens[2:])
+                            add_note(user, new_note)
+                            self.writer.write(
+                                f"PRIVMSG {self.channel} :{user}'s note has been added!\r\n".encode()
+                            )
+                            log_info(f"[note add] {user} executed note add {new_note}")
+                    
+                    else:
+                        self.writer.write(
+                            f"PRIVMSG {self.channel} :Invalid usage of command, try {self.cmd_prefix}help for more info\r\n".encode()
+                        )
+                        await self.writer.drain()
 
             except Exception as e:
                 log_error(f"Error while reading from server: {e}")
