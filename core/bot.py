@@ -2,24 +2,29 @@ import asyncio
 import ssl
 from random import randint
 
-# Import some modules from core
+# Import core modules
 from core.config import config
 from core.logger import log_info, log_error, log_debug
 from core.storage import add_note, read_notes, wipe_notes
 
+# Import command functions
+from commands.help import help_command
+from commands.note import note_command
+from commands.roll import roll_command
+
 
 class IRCBot:
-    def __init__(self, server, port, nickname, channel, cmd_prefix = "!", use_ssl="not specified"):
+    def __init__(self, server, port, nickname, channel, cmd_prefix="!", use_ssl="not specified"):
         self.server = server
         self.port = port
         self.nick = nickname
         self.channel = channel if channel.startswith("#") else f"#{channel}"
         self.cmd_prefix = cmd_prefix
-        
+
         # Auto-detect SSL unless forced
         self.use_ssl = (self.port == 6697) if use_ssl == "not specified" else use_ssl
         self.ssl_context = ssl.create_default_context() if self.use_ssl else None
-        
+
         self.connected = False
         self.reader = None
         self.writer = None
@@ -39,7 +44,6 @@ class IRCBot:
         self.writer.write(f"NICK {self.nick}\r\n".encode())
         self.writer.write(f"USER {self.nick} 0 * :{self.nick}\r\n".encode())
         await self.writer.drain()
-
         return True
 
     async def run(self):
@@ -53,6 +57,9 @@ class IRCBot:
                     continue
 
                 line = line.decode("utf-8", errors="ignore").strip()
+                if not line:
+                    continue
+
                 parts = line.split()
                 if not parts:
                     continue
@@ -70,88 +77,58 @@ class IRCBot:
                     self.connected = True
                     log_info(f"Connected to {self.server}, joined {self.channel}")
                     continue
-                    
-                # Ignore messages without actual text content
+
+                # Only process lines with actual message content
                 if " :" not in line:
                     continue
-                
-                # Split into prefix + message text 
+
                 prefix_section, msg_text = line.split(" :", 1)
                 msg_text = msg_text.strip()
-                
-                # IRC message prefix (ex: :nick!ident@host)
+
+                # Extract user from prefix
                 irc_prefix = parts[0]
-                
-                # Extract nickname from IRC prefix
                 if irc_prefix.startswith(":") and "!" in irc_prefix:
                     user = irc_prefix[1:irc_prefix.find("!")]
                 else:
                     user = irc_prefix
-                
-                # Command prefix check (bot command)
+
+                # Command prefix check
                 if not msg_text.startswith(self.cmd_prefix):
                     continue
-                
+
                 tokens = msg_text.split()
                 command = tokens[0][1:]
-                
-                # Commands
-                # Temporary help message, will be improved in the future
-                if command == "help":
-                    self.writer.write(
-                        f"PRIVMSG {self.channel} :Prefix is '{self.cmd_prefix}', available commands:'roll', 'note add [TEXT]', 'note read', 'note wipe'\r\n".encode()
-                    )
-                    await self.writer.drain()
-                
-                # Roll command
-                elif command == "roll":
-                    roll = randint(0, 100)
-                    self.writer.write(
-                        f"PRIVMSG {self.channel} :{user} rolled a {roll}\r\n".encode()
-                    )
-                    await self.writer.drain()
-                    log_info(f"[roll] {user} executed {self.cmd_prefix}roll and got {roll}")
-                
-                # Note command
-                elif command == "note":
-                    if tokens[1]:
-                        note_mode = tokens[1]
-                        
-                        # note read
-                        if note_mode == "read":
-                            notes = read_notes()
-                            for note in notes:
-                                self.writer.write(
-                                    f"PRIVMSG {self.channel} :{note}\r\n".encode()
-                                )
-                                await self.writer.drain()
-                            log_info(f"[note read] {user} executed {self.cmd_prefix}note read")
-                        
-                        # note wipe
-                        elif note_mode == "wipe":
-                            wipe_notes()
-                            self.writer.write(
-                                f"PRIVMSG {self.channel} :Notes wiped by {user}\r\n".encode()
-                            )
-                            await self.writer.drain()
-                            log_info(f"[note wipe] {user} executed {self.cmd_prefix}note wipe")
-                        
-                        # note add
-                        # Not being sanitized at the moment, will be improved in the future
-                        elif note_mode == "add" and len(tokens) >= 3:
-                            new_note = " ".join(tokens[2:])
-                            add_note(user, new_note)
-                            self.writer.write(
-                                f"PRIVMSG {self.channel} :{user}'s note has been added!\r\n".encode()
-                            )
-                            log_info(f"[note add] {user} executed {self.cmd_prefix}note add {new_note}")
-                    
+
+                # Execute commands
+                try:
+                    if command == "help":
+                        await help_command(self, user, tokens)
+                        log_info(f"{user} executed help command")
+
+                    elif command == "note":
+                        await note_command(self, user, tokens)
+                        log_info(f"{user} executed note command: {tokens[1:] if len(tokens) > 1 else []}")
+
+                    elif command == "roll":
+                        await roll_command(self, user, tokens)
+                        log_info(f"{user} executed roll command")
+
                     else:
-                        self.writer.write(
-                            f"PRIVMSG {self.channel} :Invalid usage of command, try {self.cmd_prefix}help for more info\r\n".encode()
-                        )
-                        await self.writer.drain()
+                        log_debug(f"Unknown command: {command} from {user}")
+
+                except Exception as cmd_err:
+                    log_error(f"Error executing command '{command}' for user {user}: {cmd_err}")
 
             except Exception as e:
                 log_error(f"Error while reading from server: {e}")
-                
+
+
+# Entry point for tests
+if __name__ == "__main__":
+    bot = IRCBot(
+        server=config["server"],
+        port=int(config["port"]),
+        nickname=config["nickname"],
+        channel=config["channel"]
+    )
+    asyncio.run(bot.run())

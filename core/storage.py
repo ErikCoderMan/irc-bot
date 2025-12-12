@@ -31,7 +31,7 @@ def add_note(user: str, content: str):
     """
     notes = read_notes()
     new_note = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "user": user,
         "content": content
     }
