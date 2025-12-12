@@ -96,7 +96,15 @@ class IRCBot:
                 command = tokens[0][1:]
                 
                 # Commands
-                if command == "roll":
+                # Temporary help message, will be improved in the future
+                if command == "help":
+                    self.writer.write(
+                        f"PRIVMSG {self.channel} :Prefix is '{self.cmd_prefix}', available commands:'roll', 'note add [TEXT]', 'note read', 'note wipe'\r\n".encode()
+                    )
+                    await self.writer.drain()
+                
+                # Roll command
+                elif command == "roll":
                     roll = randint(0, 100)
                     self.writer.write(
                         f"PRIVMSG {self.channel} :{user} rolled a {roll}\r\n".encode()
@@ -104,9 +112,12 @@ class IRCBot:
                     await self.writer.drain()
                     log_info(f"[roll] {user} executed {self.cmd_prefix}roll and got {roll}")
                 
+                # Note command
                 elif command == "note":
                     if tokens[1]:
                         note_mode = tokens[1]
+                        
+                        # note read
                         if note_mode == "read":
                             notes = read_notes()
                             for note in notes:
@@ -116,6 +127,7 @@ class IRCBot:
                                 await self.writer.drain()
                             log_info(f"[note read] {user} executed {self.cmd_prefix}note read")
                         
+                        # note wipe
                         elif note_mode == "wipe":
                             wipe_notes()
                             self.writer.write(
@@ -124,13 +136,15 @@ class IRCBot:
                             await self.writer.drain()
                             log_info(f"[note wipe] {user} executed {self.cmd_prefix}note wipe")
                         
+                        # note add
+                        # Not being sanitized at the moment, will be improved in the future
                         elif note_mode == "add" and len(tokens) >= 3:
                             new_note = " ".join(tokens[2:])
                             add_note(user, new_note)
                             self.writer.write(
                                 f"PRIVMSG {self.channel} :{user}'s note has been added!\r\n".encode()
                             )
-                            log_info(f"[note add] {user} executed note add {new_note}")
+                            log_info(f"[note add] {user} executed {self.cmd_prefix}note add {new_note}")
                     
                     else:
                         self.writer.write(
