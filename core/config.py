@@ -1,7 +1,6 @@
 import json
-from pathlib import Path
 
-# Path to credentials.json
+# Path to credentials file
 from core.paths import CREDENTIALS_FILE
 
 try:
