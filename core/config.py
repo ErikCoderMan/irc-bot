@@ -1,34 +1,35 @@
 import json
+from core.paths import CREDENTIALS_FILE, SETTINGS_FILE
 
-# Path to credentials file
-from core.paths import CREDENTIALS_FILE
+# Global dictionaries
+credentials = {}
+settings = {}
 
-try:
-    # Load credentials from JSON
-    with open(CREDENTIALS_FILE, "r", encoding="utf-8") as f:
-        loaded = json.load(f)
-        config = {
-            "server": loaded.get("server", ""),
-            "port": loaded.get("port", 6667),
-            "channel": loaded.get("channel", ""),
-            "nickname": loaded.get("nickname", "")
-        }
+def load_json(file_path):
+    # Load JSON from a file and return as a dict.
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+            
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Missing file: {file_path}")
         
-except FileNotFoundError:
-    raise FileNotFoundError(
-        f"{CREDENTIALS_FILE} is missing! "
-        f"Please create {CREDENTIALS_FILE.name} using credentials_example.json as a template."
-    )
-    
-except json.JSONDecodeError:
-    raise ValueError(
-        f"{CREDENTIALS_FILE} contains invalid JSON! "
-        "Please check the file format."
-    )
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON in {file_path}: {e}")
 
-# Extra check: ensure all required fields are present and not empty
-missing = [key for key, value in config.items() if value in ("", None)]
+# Load credentials
+credentials = load_json(CREDENTIALS_FILE)
+
+# Validate required credential fields
+required_fields = ["server", "port", "channel", "nickname"]
+missing = [f for f in required_fields if not credentials.get(f)]
 if missing:
-    raise ValueError(
-        f"Missing or empty values for: {', '.join(missing)} in {CREDENTIALS_FILE.name}!"
-    )
+    raise ValueError(f"Missing required credential fields: {', '.join(missing)}")
+
+# Load settings
+settings = load_json(SETTINGS_FILE)
+
+# Helper to check if a command is enabled
+def is_command_enabled(command_name: str) -> bool:
+    # Return True if the command is not listed in disabled_commands.
+    return command_name not in settings.get("disabled_commands", [])

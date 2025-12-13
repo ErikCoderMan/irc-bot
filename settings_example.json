@@ -1,13 +1,9 @@
 {
+  "command_prefix": "!",
+  "max_notes": 50,
   "log": {
     "console_level": "INFO",
     "log_level": "DEBUG"
   },
-  "command_prefix": "!",
-  "max_notes": 50,
-  "commands": {
-    "enable_roll": true,
-    "enable_note": true,
-    "enable_help": true
-  }
+  "disabled_commands": []
 }
