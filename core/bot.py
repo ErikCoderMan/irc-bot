@@ -14,15 +14,19 @@ from commands.roll import roll_command
 
 
 class IRCBot:
-    def __init__(self, server, port, nickname, channel, cmd_prefix="!", use_ssl="not specified"):
+    def __init__(self, server, port, nickname, channel, cmd_prefix="!", use_ssl=None):
         self.server = server
         self.port = port
         self.nick = nickname
         self.channel = channel if channel.startswith("#") else f"#{channel}"
         self.cmd_prefix = cmd_prefix
-
-        # Auto-detect SSL unless forced
-        self.use_ssl = (self.port == 6697) if use_ssl == "not specified" else use_ssl
+        
+        if use_ssl is None:
+            self.use_ssl = credentials["use_ssl"]
+        
+        else:
+            self.use_ssl = use_ssl
+            
         self.ssl_context = ssl.create_default_context() if self.use_ssl else None
 
         self.connected = False
@@ -122,14 +126,3 @@ class IRCBot:
             except Exception as e:
                 log_error(f"Error while reading from server: {e}")
 
-
-# Entry point for tests
-if __name__ == "__main__":
-    bot = IRCBot(
-        server=credentials["server"],
-        port=int(credentials["port"]),
-        nickname=credentials["nickname"],
-        channel=credentials["channel"],
-        cmd_prefix=settings.get("command_prefix", "!")
-    )
-    asyncio.run(bot.run())

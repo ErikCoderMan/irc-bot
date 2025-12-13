@@ -26,6 +26,12 @@ missing = [f for f in required_fields if not credentials.get(f)]
 if missing:
     raise ValueError(f"Missing required credential fields: {', '.join(missing)}")
 
+# After loading credentials
+# Ensure use_ssl exists
+if "use_ssl" not in credentials:
+    # Fallback: assume SSL if port 6697, else False
+    credentials["use_ssl"] = credentials.get("port") == 6697
+
 # Load settings
 settings = load_json(SETTINGS_FILE)
 

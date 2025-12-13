@@ -13,7 +13,8 @@ async def main():
             port=int(credentials["port"]),
             nickname=credentials["nickname"],
             channel=credentials["channel"],
-            cmd_prefix=settings.get("command_prefix", "!")  # fallback if not set
+            cmd_prefix=settings.get("command_prefix", "!"),  # fallback if not set
+            use_ssl=credentials["use_ssl"]
         )
         
     except Exception as e:
