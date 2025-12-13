@@ -1,54 +1,37 @@
 import json
+import aiofiles
 from datetime import datetime
 
 # Path to notes file
 from core.paths import NOTES_FILE
 
-def read_notes():
-    """
-    Read all notes from notes.json.
-    Returns a list of note dictionaries.
-    """
+async def read_notes() -> list:
+    """Read all notes from the JSON file."""
     try:
-        with open(NOTES_FILE, "r", encoding="utf-8") as f:
-            notes = json.load(f)
-            if not isinstance(notes, list):
-                raise ValueError("notes.json must contain a list of notes")
-            return notes
-            
+        async with aiofiles.open(NOTES_FILE, "r", encoding="utf-8") as f:
+            content = await f.read()
+            return json.loads(content) if content else []
     except FileNotFoundError:
-        # If the file doesn't exist, return empty list
         return []
-        
     except json.JSONDecodeError:
-        raise ValueError(f"{NOTES_FILE} contains invalid JSON!")
+        return []
 
+async def write_notes(notes: list):
+    """Write the full notes list to JSON file."""
+    async with aiofiles.open(NOTES_FILE, "w", encoding="utf-8") as f:
+        await f.write(json.dumps(notes, ensure_ascii=False, indent=4))
 
-def add_note(user: str, content: str):
-    """
-    Add a new note.
-    Each note is a dict with timestamp, user, and content.
-    """
-    notes = read_notes()
-    new_note = {
-        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+async def add_note(user: str, content: str):
+    """Add a note to the list with timestamp and user."""
+    notes = await read_notes()
+    note = {
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
         "user": user,
         "content": content
     }
-    notes.append(new_note)
-    _write_notes(notes)
+    notes.append(note)
+    await write_notes(notes)
 
-
-def wipe_notes():
-    """
-    Wipe all notes from the file.
-    """
-    _write_notes([])
-
-
-def _write_notes(notes_list):
-    """
-    Internal helper to write notes list to notes.json.
-    """
-    with open(NOTES_FILE, "w", encoding="utf-8") as f:
-        json.dump(notes_list, f, indent=4)
+async def wipe_notes():
+    """Clear all notes."""
+    await write_notes([])
