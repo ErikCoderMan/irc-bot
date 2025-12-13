@@ -1,0 +1,9 @@
+{
+  "command_prefix": "!",
+  "max_notes": 50,
+  "log": {
+    "console_level": "INFO",
+    "log_level": "DEBUG"
+  },
+  "disabled_commands": []
+}

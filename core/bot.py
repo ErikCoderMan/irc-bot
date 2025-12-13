@@ -3,7 +3,7 @@ import ssl
 from random import randint
 
 # Import core modules
-from core.config import config
+from core.config import credentials, settings, is_command_enabled
 from core.logger import log_info, log_error, log_debug
 from core.storage import add_note, read_notes, wipe_notes
 
@@ -14,15 +14,19 @@ from commands.roll import roll_command
 
 
 class IRCBot:
-    def __init__(self, server, port, nickname, channel, cmd_prefix="!", use_ssl="not specified"):
+    def __init__(self, server, port, nickname, channel, cmd_prefix="!", use_ssl=None):
         self.server = server
         self.port = port
         self.nick = nickname
         self.channel = channel if channel.startswith("#") else f"#{channel}"
         self.cmd_prefix = cmd_prefix
-
-        # Auto-detect SSL unless forced
-        self.use_ssl = (self.port == 6697) if use_ssl == "not specified" else use_ssl
+        
+        if use_ssl is None:
+            self.use_ssl = credentials["use_ssl"]
+        
+        else:
+            self.use_ssl = use_ssl
+            
         self.ssl_context = ssl.create_default_context() if self.use_ssl else None
 
         self.connected = False
@@ -99,22 +103,22 @@ class IRCBot:
                 tokens = msg_text.split()
                 command = tokens[0][1:]
 
-                # Execute commands
+                # Execute commands if enabled
                 try:
-                    if command == "help":
+                    if command == "help" and is_command_enabled("help"):
                         await help_command(self, user, tokens)
                         log_info(f"{user} executed help command")
 
-                    elif command == "note":
+                    elif command == "note" and is_command_enabled("note"):
                         await note_command(self, user, tokens)
                         log_info(f"{user} executed note command: {tokens[1:] if len(tokens) > 1 else []}")
 
-                    elif command == "roll":
+                    elif command == "roll" and is_command_enabled("roll"):
                         await roll_command(self, user, tokens)
                         log_info(f"{user} executed roll command")
 
                     else:
-                        log_debug(f"Unknown command: {command} from {user}")
+                        log_debug(f"Unknown or disabled command: {command} from {user}")
 
                 except Exception as cmd_err:
                     log_error(f"Error executing command '{command}' for user {user}: {cmd_err}")
@@ -122,13 +126,3 @@ class IRCBot:
             except Exception as e:
                 log_error(f"Error while reading from server: {e}")
 
-
-# Entry point for tests
-if __name__ == "__main__":
-    bot = IRCBot(
-        server=config["server"],
-        port=int(config["port"]),
-        nickname=config["nickname"],
-        channel=config["channel"]
-    )
-    asyncio.run(bot.run())

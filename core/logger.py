@@ -1,21 +1,24 @@
 import logging
-
-# Path to log file
 from core.paths import LOG_FILE
+from core.config import settings
+
+# Read log levels from settings, fallback to defaults
+console_level = getattr(logging, settings.get("log", {}).get("console_level", "INFO").upper(), logging.INFO)
+file_level = getattr(logging, settings.get("log", {}).get("log_level", "DEBUG").upper(), logging.DEBUG)
 
 # Create a custom logger
 logger = logging.getLogger("IRC_Bot")
-logger.setLevel(logging.DEBUG)  # Capture all log levels
+logger.setLevel(logging.DEBUG)  # Capture all levels, handlers filter individually
 
-# Console handler for terminal output
+# Console handler
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)  # Adjust level for console
+console_handler.setLevel(console_level)
 
-# File handler to save all logs
+# File handler
 file_handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
-file_handler.setLevel(logging.DEBUG)  # Capture everything in file
+file_handler.setLevel(file_level)
 
-# Define log message format
+# Formatter
 formatter = logging.Formatter(
     "%(asctime)s | %(levelname)s | %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
@@ -23,23 +26,19 @@ formatter = logging.Formatter(
 console_handler.setFormatter(formatter)
 file_handler.setFormatter(formatter)
 
-# Add handlers to logger
+# Add handlers
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
-
 
 # Helper functions for convenience
 def log_info(msg: str):
     logger.info(msg)
 
-
 def log_warning(msg: str):
     logger.warning(msg)
 
-
 def log_error(msg: str):
     logger.error(msg)
-
 
 def log_debug(msg: str):
     logger.debug(msg)
