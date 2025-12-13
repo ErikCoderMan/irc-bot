@@ -13,7 +13,7 @@ async def note_command(bot, user, tokens):
     note_mode = tokens[1]
     
     if note_mode == "read":
-        notes = read_notes()
+        notes = await read_notes()
         
         if not notes:
             bot.writer.write(
@@ -29,14 +29,14 @@ async def note_command(bot, user, tokens):
             await bot.writer.drain()
     
     elif note_mode == "wipe":
-        wipe_notes()
+        await wipe_notes()
         bot.writer.write(
             f"PRIVMSG {bot.channel} :Notes wiped by {user}\r\n".encode()
         )
         await bot.writer.drain()
     
     elif note_mode == "add" and len(tokens) >= 3:
-        notes = read_notes()
+        notes = await read_notes()
         max_notes = settings.get("max_notes", 50)
         
         if len(notes) >= max_notes:
@@ -58,7 +58,7 @@ async def note_command(bot, user, tokens):
             await bot.writer.drain()
             return
             
-        add_note(user, clean_text)
+        await add_note(user, clean_text)
         bot.writer.write(
             f"PRIVMSG {bot.channel} :{user}'s note has been added!\r\n".encode()
         )

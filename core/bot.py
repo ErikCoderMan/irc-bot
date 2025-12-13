@@ -1,32 +1,24 @@
 import asyncio
 import ssl
-from random import randint
+from json import JSONDecodeError
 
 # Import core modules
-from core.config import credentials, settings, is_command_enabled
+from core.config import is_command_enabled
 from core.logger import log_info, log_error, log_debug
-from core.storage import add_note, read_notes, wipe_notes
 
 # Import command functions
 from commands.help import help_command
 from commands.note import note_command
 from commands.roll import roll_command
 
-
 class IRCBot:
-    def __init__(self, server, port, nickname, channel, cmd_prefix="!", use_ssl=None):
+    def __init__(self, server, port, nickname, channel, use_ssl, cmd_prefix="!"):
         self.server = server
         self.port = port
         self.nick = nickname
         self.channel = channel if channel.startswith("#") else f"#{channel}"
         self.cmd_prefix = cmd_prefix
-        
-        if use_ssl is None:
-            self.use_ssl = credentials["use_ssl"]
-        
-        else:
-            self.use_ssl = use_ssl
-            
+        self.use_ssl = use_ssl
         self.ssl_context = ssl.create_default_context() if self.use_ssl else None
 
         self.connected = False
@@ -70,8 +62,10 @@ class IRCBot:
 
                 # Handle server PING
                 if parts[0] == "PING":
-                    self.writer.write(f"PONG {parts[1]}\r\n".encode())
+                    reply = f"PONG {parts[1]}"
+                    self.writer.write(f"{reply}\r\n".encode())
                     await self.writer.drain()
+                    log_debug(f"Replied to PING with '{reply}'")
                     continue
 
                 # Wait for 001 welcome message
@@ -119,10 +113,26 @@ class IRCBot:
 
                     else:
                         log_debug(f"Unknown or disabled command: {command} from {user}")
-
-                except Exception as cmd_err:
-                    log_error(f"Error executing command '{command}' for user {user}: {cmd_err}")
-
+                
+                except JSONDecodeError as e:
+                    log_error(f"JSONDecodeError error while executing command: '{command}' from user: '{user}', error: {e}")
+                    self.writer.write(
+                        f"PRIVMSG {self.channel} :Data file is corrupt, check logs or try reset related data\r\n".encode()
+                    )
+                    await self.writer.drain()
+                
+                except Exception as e:
+                    log_error(f"Exception error while executing command: '{command}' from user: '{user}': error: {e}")
+                    self.writer.write(f"PRIVMSG {self.channel} :Unexpected error while executing command: '{command}', exiting now, check logs\r\n".encode())
+                    await self.writer.drain()
+                    return
+            
             except Exception as e:
-                log_error(f"Error while reading from server: {e}")
+                log_error(f"Fatal connection error: {e}")
+                if self.writer:
+                    self.writer.close()
+                    await self.writer.wait_closed()
+                    
+                return
+
 
