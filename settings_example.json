@@ -2,9 +2,13 @@
   "command_prefix": "!",
   "max_notes": 50,
   "max_note_length": 200,
+  "ignore_whispers": true,
+  
   "log": {
     "console_level": "INFO",
-    "log_level": "DEBUG"
+    "file_level": "DEBUG",
+    "chat_log_enabled": true
   },
+  
   "disabled_commands": []
 }
