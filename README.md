@@ -83,22 +83,30 @@ Example configuration:
 {
   "command_prefix": "!",
   "max_notes": 50,
-  "max_note_length": 300,
+  "max_note_length": 200,
+  "ignore_whispers": true,
+  
   "log": {
     "console_level": "INFO",
-    "log_level": "DEBUG"
+    "file_level": "DEBUG",
+    "chat_log_enabled": true
   },
+  
   "disabled_commands": []
 }
+
 ```
 Settings explained:  
 - `command_prefix`: Prefix used to trigger commands in chat.  
 - `max_notes`: Maximum number of notes that can be stored.  
 - `max_note_length`: Maximum character length of a single note (longer notes are truncated).  
-
+- `ignore_whispers`: If bot should ignore private messages (PMs) or not (true/false)
 -  `log`: Logging configuration  
-   - `console_level`: Log level shown in the console.
-   - `log_level`: Log level written to the log file.  
+   - `console_level`: Minimum level to show in the console  
+   possible levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`.  
+   - `file_level`: Minimum level to write to the log file.  
+   possible levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`.  
+   - `chat_log_enabled`: Option to enable chat log.
 
 - `disabled_commands`: List of command names to disable  
 (e.g. `["roll"]` or `["roll", "note"]`)  

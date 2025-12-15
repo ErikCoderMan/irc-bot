@@ -55,7 +55,7 @@ class IRCBot:
         self.writer.write(f"{line}\r\n".encode())
         await self.writer.drain()
 
-        log_debug(f"<send> {line}")
+        log_info(f"<send> {line}")
 
         if target and user_msg is not None:
             await log_chat(user=self.nick, target=target, message=user_msg)
