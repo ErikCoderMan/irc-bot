@@ -2,14 +2,16 @@ import asyncio
 import ssl
 from json import JSONDecodeError
 
-# Import core modules
-from core.config import is_command_enabled
+from core.config import settings, is_command_enabled
 from core.logger import log_info, log_error, log_debug
 
-# Import command functions
 from commands.help import help_command
 from commands.note import note_command
 from commands.roll import roll_command
+
+from utils.chat_logger import log_chat
+from utils.text import sanitize_text
+
 
 class IRCBot:
     def __init__(self, server, port, nickname, channel, use_ssl, cmd_prefix="!"):
@@ -25,114 +27,161 @@ class IRCBot:
         self.reader = None
         self.writer = None
 
+        self.commands_map = {
+            "help": help_command,
+            "note": note_command,
+            "roll": roll_command
+        }
+
     async def connect(self):
         try:
             self.reader, self.writer = await asyncio.open_connection(
-                self.server,
-                self.port,
-                ssl=self.ssl_context
+                self.server, self.port, ssl=self.ssl_context
             )
         except Exception as e:
             log_error(f"Failed to connect to {self.server}:{self.port} - {e}")
             return False
 
-        # Send initial handshake
         self.writer.write(f"NICK {self.nick}\r\n".encode())
         self.writer.write(f"USER {self.nick} 0 * :{self.nick}\r\n".encode())
         await self.writer.drain()
         return True
 
+    async def send_line(self, line: str, target: str = None, user_msg: str = None):
+        """Send a line to the server and log it. Optionally log to chat.log."""
+        if not self.writer:
+            return
+
+        self.writer.write(f"{line}\r\n".encode())
+        await self.writer.drain()
+
+        log_info(f"<send> {line}")
+
+        if target and user_msg is not None:
+            await log_chat(user=self.nick, target=target, message=user_msg)
+
+    async def handle_ping(self, parts):
+        reply = f"PONG {parts[1]}"
+        await self.send_line(reply)
+        log_debug(f"PING -> {reply}")
+
+    async def handle_welcome(self, parts):
+        await self.send_line(f"JOIN {self.channel}")
+        self.connected = True
+        log_info(f"Connected to {self.server}, joined {self.channel}")
+
+    async def handle_event(self, user, command, parts):
+        target = parts[2] if len(parts) > 2 else self.channel
+        await log_chat(user, target, command.lower())
+
+    async def handle_privmsg(self, user, parts, line):
+        # Need at least: :nick PRIVMSG target :message
+        if len(parts) < 3 or " :" not in line:
+            return
+
+        target = parts[2]
+        _, msg_text = line.split(" :", 1)
+        msg_text = msg_text.strip()
+
+        if not msg_text:
+            return
+
+        is_pm = target == self.nick
+        target = user if is_pm else target
+        
+        # Ignore PMs if disabled
+        if is_pm and settings.get("ignore_whispers", False):
+            log_info(f"Ignored PM from {user}: {msg_text}")
+            return
+
+        # Log incoming chat
+        await log_chat(user, target, msg_text)
+
+        # Command check
+        if not msg_text.startswith(self.cmd_prefix):
+            return
+
+        tokens = msg_text.split()
+        cmd_name = tokens[0][len(self.cmd_prefix):]
+        cmd_func = self.commands_map.get(cmd_name)
+
+        try:
+            if cmd_func and is_command_enabled(cmd_name):
+                await cmd_func(self, user, target, tokens)
+                log_info(
+                    f"Executed '{' '.join(tokens)}' from '{user}' "
+                    f"in {'PM' if is_pm else target}"
+                )
+            else:
+                log_debug(f"Unknown or disabled command: {cmd_name} from {user}")
+
+        except JSONDecodeError as e:
+            log_error(f"JSON error in command '{cmd_name}' from '{user}': {e}")
+            await self.send_line(
+                f"PRIVMSG {target} :Data file is corrupt",
+                target=target,
+                user_msg="Data file is corrupt"
+            )
+
+        except Exception as e:
+            log_error(f"Exception in command '{cmd_name}' from '{user}': {e}")
+            await self.send_line(
+                f"PRIVMSG {target} :Unexpected error, check logs",
+                target=target,
+                user_msg="Unexpected error"
+            )
+            
     async def run(self):
         if not await self.connect():
             return
 
         while True:
             try:
-                line = await self.reader.readline()
-                if not line:
+                raw = await self.reader.readline()
+                if not raw:
                     continue
 
-                line = line.decode("utf-8", errors="ignore").strip()
+                line = raw.decode("utf-8", errors="ignore").strip()
                 if not line:
                     continue
+                    
+                line = sanitize_text(line)
 
                 parts = line.split()
                 if not parts:
                     continue
 
-                # Handle server PING
-                if parts[0] == "PING":
-                    reply = f"PONG {parts[1]}"
-                    self.writer.write(f"{reply}\r\n".encode())
-                    await self.writer.drain()
-                    log_debug(f"Replied to PING with '{reply}'")
-                    continue
+                # Extract basic info
+                prefix = parts[0]
+                command = parts[1]
+                user = prefix[1:prefix.find("!")] if "!" in prefix else prefix
 
-                # Wait for 001 welcome message
-                if not self.connected and len(parts) >= 2 and parts[1] == "001":
-                    self.writer.write(f"JOIN {self.channel}\r\n".encode())
-                    await self.writer.drain()
-                    self.connected = True
-                    log_info(f"Connected to {self.server}, joined {self.channel}")
-                    continue
-
-                # Only process lines with actual message content
-                if " :" not in line:
-                    continue
-
-                prefix_section, msg_text = line.split(" :", 1)
-                msg_text = msg_text.strip()
-
-                # Extract user from prefix
-                irc_prefix = parts[0]
-                if irc_prefix.startswith(":") and "!" in irc_prefix:
-                    user = irc_prefix[1:irc_prefix.find("!")]
+                # Log line
+                if command in ("PRIVMSG", "JOIN", "PART", "QUIT"):
+                    log_info(f"<recv> {line}")
                 else:
-                    user = irc_prefix
+                    log_debug(f"<recv> {line}")
 
-                # Command prefix check
-                if not msg_text.startswith(self.cmd_prefix):
+                # Handle different types
+                if command == "PING":
+                    await self.handle_ping(parts)
                     continue
 
-                tokens = msg_text.split()
-                command = tokens[0][1:]
+                if not self.connected and len(parts) >= 2 and parts[1] == "001":
+                    await self.handle_welcome(parts)
+                    continue
 
-                # Execute commands if enabled
-                try:
-                    if command == "help" and is_command_enabled("help"):
-                        await help_command(self, user, tokens)
-                        log_info(f"{user} executed help command")
+                if command in ("JOIN", "PART", "QUIT"):
+                    await self.handle_event(user, command, parts)
+                    continue
 
-                    elif command == "note" and is_command_enabled("note"):
-                        await note_command(self, user, tokens)
-                        log_info(f"{user} executed note command: {tokens[1:] if len(tokens) > 1 else []}")
+                if command == "PRIVMSG" and " :" in line:
+                    await self.handle_privmsg(user, parts, line)
+                    continue
 
-                    elif command == "roll" and is_command_enabled("roll"):
-                        await roll_command(self, user, tokens)
-                        log_info(f"{user} executed roll command")
-
-                    else:
-                        log_debug(f"Unknown or disabled command: {command} from {user}")
-                
-                except JSONDecodeError as e:
-                    log_error(f"JSONDecodeError error while executing command: '{command}' from user: '{user}', error: {e}")
-                    self.writer.write(
-                        f"PRIVMSG {self.channel} :Data file is corrupt, check logs or try reset related data\r\n".encode()
-                    )
-                    await self.writer.drain()
-                
-                except Exception as e:
-                    log_error(f"Exception error while executing command: '{command}' from user: '{user}': error: {e}")
-                    self.writer.write(f"PRIVMSG {self.channel} :Unexpected error while executing command: '{command}', exiting now, check logs\r\n".encode())
-                    await self.writer.drain()
-                    return
-            
             except Exception as e:
                 log_error(f"Fatal connection error: {e}")
                 if self.writer:
                     self.writer.close()
                     await self.writer.wait_closed()
-                    
                 return
-
-

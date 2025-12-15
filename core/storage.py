@@ -32,7 +32,7 @@ async def add_note(user: str, content: str):
     notes = await read_notes()
 
     note = {
-        "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S") + " UTC",
         "user": user,
         "content": content
     }

@@ -4,7 +4,7 @@ from core.config import settings
 
 # Read log levels from settings, fallback to defaults
 console_level = getattr(logging, settings.get("log", {}).get("console_level", "INFO").upper(), logging.INFO)
-file_level = getattr(logging, settings.get("log", {}).get("log_level", "DEBUG").upper(), logging.DEBUG)
+file_level = getattr(logging, settings.get("log", {}).get("file_level", "DEBUG").upper(), logging.DEBUG)
 
 # Create a custom logger
 logger = logging.getLogger("IRC_Bot")
