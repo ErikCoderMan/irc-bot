@@ -6,9 +6,9 @@ async def help_command(bot, user, target, tokens=None):
     all_commands = [
         "help",
         "roll",
-        "note add <text>",
-        "note read",
-        "note wipe",
+        "note-add <text>",
+        "note-read",
+        "note-wipe",
     ]
 
     enabled_cmds = [

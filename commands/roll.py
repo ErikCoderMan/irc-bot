@@ -8,4 +8,3 @@ async def roll_command(bot, user, target, tokens=None):
         target=target,
         message=message
     )
-    await bot.writer.drain()

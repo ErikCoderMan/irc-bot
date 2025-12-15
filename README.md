@@ -60,9 +60,9 @@ Example (using default prefix `!`):
 ```md
 !help
 !roll
-!note add hello world
-!note read
-!note wipe
+!note-add hello world
+!note-read
+!note-wipe
 ```
 
 ## Commands  
@@ -70,9 +70,9 @@ Example (using default prefix `!`):
 
 - `!help`
 - `!roll`
-- `!note add <text>`
-- `!note read`
-- `!note wipe`
+- `!note-add <text>`
+- `!note-read`
+- `!note-wipe`
 
 ## Configuration
 

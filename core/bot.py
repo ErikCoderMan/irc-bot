@@ -30,8 +30,10 @@ class IRCBot:
 
         self.commands = {
             "help": help_command,
-            "note": note_command,
-            "roll": roll_command,
+            "note-read": note_command,
+            "note-add": note_command,
+            "note-wipe": note_command,
+            "roll": roll_command
         }
 
     # Connection
@@ -108,7 +110,10 @@ class IRCBot:
             return
 
         tokens = msg_text.split()
-        cmd_name = tokens[0][len(self.cmd_prefix):]
+        raw_cmd = tokens[0]
+        cmd_name = raw_cmd[len(self.cmd_prefix):]
+        tokens = [cmd_name, *tokens[1:]]
+        
         cmd_func = self.commands.get(cmd_name)
 
         try:
