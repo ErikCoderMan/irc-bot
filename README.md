@@ -60,9 +60,9 @@ Example (using default prefix `!`):
 ```md
 !help
 !roll
-!note add hello world
-!note read
-!note wipe
+!note-add hello world
+!note-read
+!note-wipe
 ```
 
 ## Commands  
@@ -70,9 +70,9 @@ Example (using default prefix `!`):
 
 - `!help`
 - `!roll`
-- `!note add <text>`
-- `!note read`
-- `!note wipe`
+- `!note-add <text>`
+- `!note-read`
+- `!note-wipe`
 
 ## Configuration
 
@@ -84,7 +84,7 @@ Example configuration:
   "command_prefix": "!",
   "max_notes": 50,
   "max_note_length": 200,
-  "ignore_whispers": true,
+  "allow_whispers": false,
   
   "log": {
     "console_level": "INFO",
