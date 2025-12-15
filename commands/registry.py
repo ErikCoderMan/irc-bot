@@ -1,4 +1,4 @@
-# commands/registry.py
+# import all bot commands
 from commands.help import help_command
 from commands.note import note_command
 from commands.roll import roll_command
