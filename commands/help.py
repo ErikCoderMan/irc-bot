@@ -1,30 +1,33 @@
 from core.config import settings
 
 async def help_command(bot, user, target, tokens=None):
+    from commands.registry import COMMANDS
+    
     disabled = settings.get("disabled_commands", [])
 
-    all_commands = [
-        "help",
-        "roll",
-        "note-add <text>",
-        "note-read",
-        "note-wipe",
-    ]
+    arg = tokens[1] if len(tokens) > 1 else None
+    result = []
 
-    enabled_cmds = [
-        cmd for cmd in all_commands
-        if cmd.split()[0] not in disabled
-    ]
-
-    if not enabled_cmds:
-        message = "No commands are currently enabled."
+    if arg:
+        cmd_info = COMMANDS.get(arg)
+        if cmd_info and arg not in disabled:
+            usage = f"{bot.cmd_prefix}{cmd_info.get('usage', arg)}"
+            description = cmd_info.get("description", "")
+            result.append(f"{usage} - {description}")
+        else:
+            result.append(f"No info for command '{arg}' or command is disabled.")
     else:
-        message = (
-            f"Use prefix '{bot.cmd_prefix}' before commands. "
-            f"Available commands: {', '.join(enabled_cmds)}"
-        )
+        for cmd_name, cmd_info in COMMANDS.items():
+            if cmd_name not in disabled:
+                usage = f"{bot.cmd_prefix}{cmd_info.get('usage', cmd_name)}"
+                description = cmd_info.get("description", "")
+                result.append(f"{usage} - {description}")
 
-    await bot.send_privmsg(
-        target=target,
-        message=message
-    )
+        if not result:
+            result.append("No commands are currently enabled.")
+            
+        else:
+            result.insert(0, f"List of available commands:")
+
+    for line in result:
+        await bot.send_privmsg(target=target, message=line)

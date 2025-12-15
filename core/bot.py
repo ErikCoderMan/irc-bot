@@ -2,16 +2,18 @@ import asyncio
 import ssl
 from json import JSONDecodeError
 
+# configs
 from core.config import settings, is_command_enabled
+
+# logger functions
 from core.logger import log_info, log_error, log_debug
 
-from commands.help import help_command
-from commands.note import note_command
-from commands.roll import roll_command
+# import all of the bot commands from one place
+from commands.registry import COMMANDS 
 
+# util
 from utils.chat_logger import log_chat
 from utils.text import sanitize_text
-
 
 class IRCBot:
     def __init__(self, server, port, nickname, channel, use_ssl, cmd_prefix="!"):
@@ -27,14 +29,6 @@ class IRCBot:
         self.reader = None
         self.writer = None
         self.connected = False
-
-        self.commands = {
-            "help": help_command,
-            "note-read": note_command,
-            "note-add": note_command,
-            "note-wipe": note_command,
-            "roll": roll_command
-        }
 
     # Connection
     async def connect(self):
@@ -114,14 +108,15 @@ class IRCBot:
         cmd_name = raw_cmd[len(self.cmd_prefix):]
         tokens = [cmd_name, *tokens[1:]]
         
-        cmd_func = self.commands.get(cmd_name)
+        cmd_entry = COMMANDS.get(cmd_name)
 
         try:
-            if cmd_func and is_command_enabled(cmd_name):
-                await cmd_func(self, user, target, tokens)
+            if cmd_entry and is_command_enabled(cmd_name):
+                # Call bot-command function
+                await cmd_entry["func"](self, user, target, tokens)
+                
                 log_info(
-                    f"Executed '{cmd_name}' from {user} "
-                    f"in {'PM' if is_pm else target}"
+                    f"Executed '{cmd_name}' from '{user}' in {'PM' if is_pm else target}"
                 )
             else:
                 log_debug(f"Unknown/disabled command: {cmd_name}")
