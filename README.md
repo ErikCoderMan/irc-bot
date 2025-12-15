@@ -84,7 +84,7 @@ Example configuration:
   "command_prefix": "!",
   "max_notes": 50,
   "max_note_length": 200,
-  "ignore_whispers": true,
+  "allow_whispers": false,
   
   "log": {
     "console_level": "INFO",

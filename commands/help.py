@@ -24,8 +24,7 @@ async def help_command(bot, user, target, tokens=None):
             f"Available commands: {', '.join(enabled_cmds)}"
         )
 
-    await bot.send_line(
-        f"PRIVMSG {target} :{message}",
+    await bot.send_privmsg(
         target=target,
-        user_msg=message
+        message=message
     )
