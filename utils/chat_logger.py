@@ -6,7 +6,7 @@ from utils.text import sanitize_text
 async def log_chat(user: str, target: str, message: str):
     clean_message = sanitize_text(message)
     
-    # Format timestamp like logging.Formatter
+    # Create timestamp
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
     # Normalize PMs
