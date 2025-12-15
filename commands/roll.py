@@ -1,6 +1,12 @@
 from random import randint
 
-async def roll_command(bot, user, tokens):
+async def roll_command(bot, user, target, tokens=None):
     roll = randint(0, 100)
-    bot.writer.write(f"PRIVMSG {bot.channel} :{user} rolled a {roll}\r\n".encode())
+    message = f"{user} rolled {roll}"
+    
+    await bot.send_line(
+        f"PRIVMSG {target} :{message}",
+        target=target,
+        user_msg=message
+    )
     await bot.writer.drain()
