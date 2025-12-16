@@ -3,7 +3,7 @@ import ssl
 from json import JSONDecodeError
 
 # configs
-from core.config import settings, is_command_enabled
+from core.config import config, is_command_enabled
 
 # logger functions
 from core.logger import log_info, log_error, log_debug
@@ -58,7 +58,7 @@ class IRCBot:
         message = sanitize_text(message)
         await self.send_raw(f"PRIVMSG {target} :{message}")
 
-        if settings.get("chat_log_enabled", True):
+        if config["logging"].get("chat_log_enabled", True):
             await log_chat(self.nick, target, message)
 
     # Handlers
@@ -73,7 +73,7 @@ class IRCBot:
     async def handle_event(self, user, command, parts):
         target = parts[2] if len(parts) > 2 else self.channel
 
-        if settings.get("chat_log_enabled", True):
+        if config["logging"].get("chat_log_enabled", True):
             await log_chat(user, target, command.lower())
 
     async def handle_privmsg(self, user, parts, line):
@@ -88,7 +88,7 @@ class IRCBot:
             return
 
         is_pm = raw_target == self.nick
-        allow_whispers = settings.get("allow_whispers", False)
+        allow_whispers = config["bot"].get("allow_whispers", False)
 
         if is_pm and not allow_whispers:
             log_debug(f"Ignored PM from {user}")
@@ -96,7 +96,7 @@ class IRCBot:
 
         target = user if is_pm else raw_target
 
-        if settings.get("chat_log_enabled", True):
+        if config["logging"].get("chat_log_enabled", True):
             await log_chat(user, target, msg_text)
 
         # Command handling

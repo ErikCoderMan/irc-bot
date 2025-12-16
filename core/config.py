@@ -1,41 +1,52 @@
-import json
-from core.paths import CREDENTIALS_FILE, SETTINGS_FILE
+import tomllib
+from pathlib import Path
 
-# Global dictionaries
-credentials = {}
-settings = {}
+''' Project paths '''
 
-def load_json(file_path):
-    # Load JSON from a file and return as a dict.
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-            
-    except FileNotFoundError:
-        raise FileNotFoundError(f"Missing file: {file_path}")
-        
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON in {file_path}") from e
+# Project root (…/project)
+ROOT_DIR = Path(__file__).parent.parent
 
-# Load credentials
-credentials = load_json(CREDENTIALS_FILE)
+# Config file
+CONFIG_FILE = ROOT_DIR / "config.toml"
 
-# Validate required credential fields
-required_fields = ["server", "port", "channel", "nickname"]
-missing = [f for f in required_fields if not credentials.get(f)]
+# Data files
+NOTES_FILE = ROOT_DIR / "data" / "notes.json"
+
+# Log files
+LOG_FILE = ROOT_DIR / "logs" / "bot.log"
+CHAT_LOG_FILE = ROOT_DIR / "logs" / "chat.log"
+
+
+''' Config loading '''
+
+with open(CONFIG_FILE, "rb") as f:
+    config = tomllib.load(f)
+
+
+''' Validate required values in config irc field '''
+
+required = ["server", "port", "channel", "nickname"]
+missing = [key for key in required if config["irc"].get(key) is None]
 if missing:
-    raise ValueError(f"Missing required credential fields: {', '.join(missing)}")
+    raise ValueError(
+        f"Missing required config values: {', '.join(missing)}"
+    )
 
-# After loading credentials
 # Ensure use_ssl exists
-if "use_ssl" not in credentials:
-    # Fallback: assume SSL if port 6697, else False
-    credentials["use_ssl"] = credentials.get("port") == 6697
+if "use_ssl" not in config["irc"]:
+    # Fallback: assume SSL if using default SSL port
+    config["irc"]["use_ssl"] = config["irc"].get("port") == 6697
 
-# Load settings
-settings = load_json(SETTINGS_FILE)
 
-# Helper to check if a command is enabled
+''' Helpers '''
+
+enabled_commands = []
+for key, value in config["commands"].items():
+    if value is True:
+        enabled_commands.append(key)
+
+
 def is_command_enabled(command_name: str) -> bool:
-    # Return True if the command is not listed in disabled_commands.
-    return command_name not in settings.get("disabled_commands", [])
+    # Return True if the command is enabled and False if not
+    return config["commands"].get(command_name, [])
+    

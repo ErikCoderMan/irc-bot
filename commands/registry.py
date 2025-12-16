@@ -14,19 +14,19 @@ COMMANDS = {
         "description": "Rolls a number between 0 and 100",
         "usage": "roll"
     },
-    "note-add": {
+    "note_add": {
         "func": note_command,
         "description": "Add a note to the notes list",
-        "usage": "note-add [text]"
+        "usage": "note_add [text]"
     },
-    "note-read": {
+    "note_read": {
         "func": note_command,
         "description": "Read all stored notes",
-        "usage": "note-read"
+        "usage": "note_read"
     },
-    "note-wipe": {
+    "note_wipe": {
         "func": note_command,
         "description": "Remove all stored notes",
-        "usage": "note-wipe"
+        "usage": "note_wipe"
     }
 }

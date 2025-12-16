@@ -1,16 +1,14 @@
-from core.config import settings
+from core.config import config, enabled_commands
 
 async def help_command(bot, user, target, tokens=None):
     from commands.registry import COMMANDS
     
-    disabled = settings.get("disabled_commands", [])
-
     arg = tokens[1] if len(tokens) > 1 else None
     result = []
 
     if arg:
         cmd_info = COMMANDS.get(arg)
-        if cmd_info and arg not in disabled:
+        if cmd_info and arg in enabled_commands:
             usage = f"{bot.cmd_prefix}{cmd_info.get('usage', arg)}"
             description = cmd_info.get("description", "")
             result.append(f"{usage} - {description}")
@@ -18,7 +16,7 @@ async def help_command(bot, user, target, tokens=None):
             result.append(f"No info for command '{arg}' or command is disabled.")
     else:
         for cmd_name, cmd_info in COMMANDS.items():
-            if cmd_name not in disabled:
+            if cmd_name in enabled_commands:
                 usage = f"{bot.cmd_prefix}{cmd_info.get('usage', cmd_name)}"
                 description = cmd_info.get("description", "")
                 result.append(f"{usage} - {description}")
