@@ -18,7 +18,7 @@ async def main():
         )
         
     except Exception as e:
-        log_error(f"Failed to initialize bot: {e}")
+        log_error(f"Failed to initialize bot", exc=e)
         return
 
     try:
@@ -28,7 +28,7 @@ async def main():
         log_info("Bot stopped manually.")
         
     except Exception as e:
-        log_error(f"Unexpected error in main: {e}")
+        log_error(f"Unexpected error in main", exc=e)
 
 
 if __name__ == "__main__":

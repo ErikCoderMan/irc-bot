@@ -31,14 +31,20 @@ logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
 # Helper functions for convenience
-def log_info(msg: str):
+def log_debug(msg: str) -> None:
+    logger.debug(msg)
+    
+def log_info(msg: str) -> None:
     logger.info(msg)
 
-def log_warning(msg: str):
-    logger.warning(msg)
+def log_warning(msg: str, exc: Exception | None = None) -> None:
+    if exc:
+        logger.warning(msg, exc_info=(type(exc), exc, exc.__traceback__))
+    else:
+        logger.warning(msg)
 
-def log_error(msg: str):
-    logger.error(msg)
-
-def log_debug(msg: str):
-    logger.debug(msg)
+def log_error(msg: str, exc: Exception | None = None) -> None:
+    if exc:
+        logger.error(msg, exc_info=(type(exc), exc, exc.__traceback__))
+    else:
+        logger.error(msg)
