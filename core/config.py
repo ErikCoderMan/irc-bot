@@ -1,4 +1,4 @@
-import json
+import tomllib
 from pathlib import Path
 
 ''' Project paths '''
@@ -6,63 +6,47 @@ from pathlib import Path
 # Project root (…/project)
 ROOT_DIR = Path(__file__).parent.parent
 
-# Config files
-CREDENTIALS_FILE = ROOT_DIR / "credentials.json"
-SETTINGS_FILE = ROOT_DIR / "settings.json"
+# Config file
+CONFIG_FILE = ROOT_DIR / "config.toml"
 
 # Data files
-NOTES_FILE = ROOT_DIR / "notes.json"
+NOTES_FILE = ROOT_DIR / "data" / "notes.json"
 
 # Log files
-LOG_FILE = ROOT_DIR / "bot.log"
-CHAT_LOG_FILE = ROOT_DIR / "chat.log"
+LOG_FILE = ROOT_DIR / "logs" / "bot.log"
+CHAT_LOG_FILE = ROOT_DIR / "logs" / "chat.log"
 
 
 ''' Config loading '''
 
-credentials: dict = {}
-settings: dict = {}
+with open(CONFIG_FILE, "rb") as f:
+    config = tomllib.load(f)
 
 
-def load_json(file_path: Path) -> dict:
-    # Load JSON from a file and return it as a dictionary.
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+''' Validate required values in config irc field '''
 
-    except FileNotFoundError:
-        raise FileNotFoundError(f"Missing file: {file_path}")
-
-    except json.JSONDecodeError as e:
-        # Wrap JSON error to make it clear which file is broken
-        raise ValueError(f"Invalid JSON in {file_path}") from e
-
-
-''' Load credentials '''
-
-credentials = load_json(CREDENTIALS_FILE)
-
-# Validate required credential fields
-required_fields = ["server", "port", "channel", "nickname"]
-missing = [field for field in required_fields if not credentials.get(field)]
+required = ["server", "port", "channel", "nickname"]
+missing = [key for key in required if config["irc"].get(key) is None]
 if missing:
     raise ValueError(
-        f"Missing required credential fields: {', '.join(missing)}"
+        f"Missing required config values: {', '.join(missing)}"
     )
 
 # Ensure use_ssl exists
-if "use_ssl" not in credentials:
+if "use_ssl" not in config["irc"]:
     # Fallback: assume SSL if using default SSL port
-    credentials["use_ssl"] = credentials.get("port") == 6697
-
-
-''' Load settings '''
-
-settings = load_json(SETTINGS_FILE)
+    config["irc"]["use_ssl"] = config["irc"].get("port") == 6697
 
 
 ''' Helpers '''
 
+enabled_commands = []
+for key, value in config["commands"].items():
+    if value is True:
+        enabled_commands.append(key)
+
+
 def is_command_enabled(command_name: str) -> bool:
-    # Return True if the command is not listed in disabled_commands.
-    return command_name not in settings.get("disabled_commands", [])
+    # Return True if the command is enabled and False if not
+    return config["commands"].get(command_name, [])
+    

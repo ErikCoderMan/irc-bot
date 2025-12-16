@@ -1,5 +1,5 @@
 import asyncio
-from core.config import credentials, settings
+from core.config import config
 from core.logger import log_info, log_error
 from core.bot import IRCBot
 
@@ -9,12 +9,12 @@ async def main():
 
     try:
         bot = IRCBot(
-            server=credentials["server"],
-            port=int(credentials["port"]),
-            nickname=credentials["nickname"],
-            channel=credentials["channel"],
-            cmd_prefix=settings.get("command_prefix", "!"),  # fallback if not set
-            use_ssl=credentials["use_ssl"]
+            server=config["irc"]["server"],
+            port=int(config["irc"]["port"]),
+            nickname=config["irc"]["nickname"],
+            channel=config["irc"]["channel"],
+            cmd_prefix=config["bot"].get("command_prefix", "!"),  # fallback if not set
+            use_ssl=config["irc"]["use_ssl"]
         )
         
     except Exception as e:
