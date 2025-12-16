@@ -2,10 +2,8 @@ from datetime import datetime, timezone
 from json import JSONDecodeError
 
 from core.storage import read_json, write_json, wipe_json
-from core.paths import NOTES_FILE
-from core.config import settings
+from core.config import settings, NOTES_FILE
 from utils.text import sanitize_text, truncate_text
-
 
 async def note_command(bot, user, target, tokens):
     note_mode = tokens[0]

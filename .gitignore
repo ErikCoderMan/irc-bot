@@ -212,3 +212,7 @@ bot.log
 credentials.json
 settings.json
 chat.log
+config.json
+config.toml
+logs/
+data/

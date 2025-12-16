@@ -1,6 +1,6 @@
 import aiofiles
 from datetime import datetime, timezone
-from core.paths import CHAT_LOG_FILE
+from core.config import CHAT_LOG_FILE
 from utils.text import sanitize_text
 
 async def log_chat(user: str, target: str, message: str):

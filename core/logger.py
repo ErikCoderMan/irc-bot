@@ -1,6 +1,5 @@
 import logging
-from core.paths import LOG_FILE
-from core.config import settings
+from core.config import settings, LOG_FILE
 
 # Read log levels from settings, fallback to defaults
 console_level = getattr(logging, settings.get("log", {}).get("console_level", "INFO").upper(), logging.INFO)
