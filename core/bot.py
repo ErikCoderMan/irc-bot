@@ -121,12 +121,8 @@ class IRCBot:
             else:
                 log_debug(f"Unknown/disabled command: {cmd_name}")
 
-        except JSONDecodeError as e:
-            log_error(f"JSON error in {cmd_name}: {e}")
-            await self.send_privmsg(target, "Data file is corrupt")
-
         except Exception as e:
-            log_error(f"Command error in {cmd_name}: {e}")
+            log_error(f"Command error in {cmd_name}: ", exc=e)
             await self.send_privmsg(target, "Unexpected error, check logs")
 
     # Run 
@@ -170,7 +166,7 @@ class IRCBot:
                     await self.handle_privmsg(user, parts, line)
 
             except Exception as e:
-                log_error(f"Fatal error: {e}")
+                log_error(f"Fatal error: ", e)
                 if self.writer:
                     self.writer.close()
                     await self.writer.wait_closed()

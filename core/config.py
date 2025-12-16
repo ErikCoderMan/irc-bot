@@ -15,7 +15,7 @@ def load_json(file_path):
         raise FileNotFoundError(f"Missing file: {file_path}")
         
     except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON in {file_path}: {e}")
+        raise ValueError(f"Invalid JSON in {file_path}") from e
 
 # Load credentials
 credentials = load_json(CREDENTIALS_FILE)
