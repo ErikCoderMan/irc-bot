@@ -102,7 +102,7 @@ help = true
 roll = true
 note_add = true
 note_read = true
-note_wipe = false
+note_wipe = true
 
 
 ```
@@ -112,10 +112,11 @@ Settings explained:
 `port`: IRC server port  
 `channel`: IRC channel name  
 `nickname`: Nickname that will be visible to everyone in the channel  
+`use_ssl`: Setting to use encrypted traffic or not (`true`/`false`)  
 
 `[bot]`  
 `command_prefix`: Prefix used to trigger commands in chat.  
-`allow_whispers`: If bot should allow private messages (PMs) or not (true/false)  
+`allow_whispers`: If bot should allow private messages (PMs) or not (`true`/`false`)  
 
 `[notes]`  
 `max_notes`: Maximum number of notes that can be stored.  
@@ -131,5 +132,4 @@ possible levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`.
 `[commands]`  
 Here you can toggle commands (`true`/`false`)  
 the bot will not react to any command that is set to `false` in the `config.toml` file  
-
-
+(loaded during program start so changes will take effect next time main.py is started)  
