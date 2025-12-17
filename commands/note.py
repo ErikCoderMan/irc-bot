@@ -1,15 +1,25 @@
 from datetime import datetime, timezone
-from json import JSONDecodeError
 
 from core.storage import read_json, write_json, wipe_json
-from core.config import config, NOTES_FILE
-from utils.text import sanitize_text, truncate_text
+from core.config import config, DATA_DIR
+from utils.text import sanitize_text, truncate_text, sanitize_filename
+
+NOTE_DIR = DATA_DIR / "note"
+NOTE_DIR.mkdir(parents=True, exist_ok = True)
 
 async def note_command(bot, user, target, tokens):
+    if not tokens:
+        return
+    
     note_mode = tokens[0]
+    
+    note_filename = sanitize_text(target).strip().lower()
+    note_filename = sanitize_filename(note_filename)
+    note_filename = f"channel_{note_filename}" if target.startswith("#") else f"private_{note_filename}"
+    note_file = NOTE_DIR / f"{note_filename}.json"
 
     if note_mode == "note_read":
-        notes = await read_json(NOTES_FILE)
+        notes = await read_json(note_file)
 
         if not notes:
             await bot.send_privmsg(
@@ -23,7 +33,7 @@ async def note_command(bot, user, target, tokens):
             await bot.send_privmsg(target=target, message=line)
 
     elif note_mode == "note_wipe":
-        await wipe_json(NOTES_FILE)
+        await wipe_json(note_file)
         await bot.send_privmsg(
             target=target,
             message=f"Notes wiped by {user}"
@@ -37,7 +47,7 @@ async def note_command(bot, user, target, tokens):
             )
             return
 
-        notes = await read_json(NOTES_FILE)
+        notes = await read_json(note_file)
         max_notes = config["notes"].get("max_notes", 50)
 
         if len(notes) >= max_notes:
@@ -70,7 +80,7 @@ async def note_command(bot, user, target, tokens):
         }
 
         notes.append(note)
-        await write_json(NOTES_FILE, notes)
+        await write_json(note_file, notes)
 
         await bot.send_privmsg(
             target=target,

@@ -4,7 +4,7 @@ import tomlkit
 # Paths
 ROOT_DIR = Path(__file__).parent
 CONFIG_FILE = ROOT_DIR / "config.toml"
-LOG_DIR = ROOT_DIR / "logs"
+LOGS_DIR = ROOT_DIR / "logs"
 DATA_DIR = ROOT_DIR / "data"
 
 # Default config
@@ -40,7 +40,7 @@ DEFAULT_CONFIG = {
 
 
 def create_dirs():
-    for d in [LOG_DIR, DATA_DIR]:
+    for d in [LOGS_DIR, DATA_DIR]:
         if not d.exists():
             d.mkdir()
             print(f"Created directory: {d}")

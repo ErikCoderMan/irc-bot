@@ -9,13 +9,13 @@ ROOT_DIR = Path(__file__).parent.parent
 # Config file
 CONFIG_FILE = ROOT_DIR / "config.toml"
 
-# Data files
-NOTES_FILE = ROOT_DIR / "data" / "notes.json"
+# Data dir
+DATA_DIR = ROOT_DIR / "data"
+DATA_DIR.mkdir(parents=True, exist_ok = True)
 
-# Log files
-LOG_FILE = ROOT_DIR / "logs" / "bot.log"
-CHAT_LOG_FILE = ROOT_DIR / "logs" / "chat.log"
-
+# Logs dir
+LOGS_DIR = ROOT_DIR / "logs"
+LOGS_DIR.mkdir(parents=True, exist_ok = True)
 
 ''' Config loading '''
 
@@ -47,6 +47,6 @@ for key, value in config["commands"].items():
 
 
 def is_command_enabled(command_name: str) -> bool:
-    # Return True if the command is enabled and False if not
-    return config["commands"].get(command_name, [])
+    # Return True if the command is enabled or False if not
+    return bool(config["commands"].get(command_name, False))
     
