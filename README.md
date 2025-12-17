@@ -102,7 +102,7 @@ help = true
 roll = true
 note_add = true
 note_read = true
-note_wipe = false
+note_wipe = true
 
 
 ```
