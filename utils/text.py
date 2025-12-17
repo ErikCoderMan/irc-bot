@@ -1,5 +1,7 @@
 # Text related util functions goes here
 
+import re
+
 # Text sanitizer function
 def sanitize_text(text: str) -> str:
     allowed_symbols = set(" .,!?-_:;@#()[]{}")
@@ -17,3 +19,10 @@ def sanitize_text(text: str) -> str:
 def truncate_text(text: str, max_length: int) -> str:
     # Truncate text to a maximum length.
     return text[:max_length]
+
+# Sanitize filename
+def sanitize_filename(name: str) -> str:
+    name = name.strip().lower()
+    safe_name = re.sub(r"[^\w\-]", "_", name)
+    safe_name = safe_name.lstrip("_")
+    return safe_name
