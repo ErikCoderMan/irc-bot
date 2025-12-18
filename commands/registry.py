@@ -2,6 +2,7 @@
 from commands.help import help_command
 from commands.note import note_command
 from commands.roll import roll_command
+from commands.funfact import funfact_command
 
 COMMANDS = {
     "help": {
@@ -28,5 +29,10 @@ COMMANDS = {
         "func": note_command,
         "description": "Remove all stored notes",
         "usage": "note_wipe"
+    },
+    "funfact": {
+        "func": funfact_command,
+        "description": "Returns a random fact. With option to specify category.",
+        "usage": "funfact [category]"
     }
 }

@@ -70,6 +70,7 @@ Example (using default prefix `!`):
 - `!note_add <text>`
 - `!note_read`
 - `!note_wipe`
+- `!funfact [category]`
 
 ## Configuration
 
@@ -103,7 +104,6 @@ roll = true
 note_add = true
 note_read = true
 note_wipe = true
-
 
 ```
 Settings explained:  
