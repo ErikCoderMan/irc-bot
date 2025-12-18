@@ -35,6 +35,10 @@ DEFAULT_CONFIG = {
         "note_add": True,
         "note_read": True,
         "note_wipe": True,
+        "funfact": True,
+        "quote": True,
+        "flip": True,
+        "joke": True
     }
 }
 
