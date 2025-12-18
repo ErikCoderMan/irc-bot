@@ -3,6 +3,7 @@ from commands.help import help_command
 from commands.note import note_command
 from commands.roll import roll_command
 from commands.funfact import funfact_command
+from commands.quote import quote_command
 
 COMMANDS = {
     "help": {
@@ -34,5 +35,10 @@ COMMANDS = {
         "func": funfact_command,
         "description": "Returns a random fact. With option to specify category.",
         "usage": "funfact [category]"
+    },
+    "quote": {
+        "func": quote_command,
+        "description": "Returns a rando quote",
+        "usage": "quote"
     }
 }

@@ -26,5 +26,5 @@ async def funfact_command(bot, user, target, tokens=None):
 
     await bot.send_privmsg(
         target=target,
-        message=f"{category_name}: {random_fact}".lower()
+        message=f"{category_name.capitalize()}: {random_fact.lower()}"
     )
