@@ -5,6 +5,7 @@ from commands.roll import roll_command
 from commands.funfact import funfact_command
 from commands.quote import quote_command
 from commands.flip import flip_command
+from commands.joke import joke_command
 
 COMMANDS = {
     "help": {
