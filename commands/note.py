@@ -43,7 +43,7 @@ async def note_command(bot, user, target, tokens):
         if len(tokens) < 2:
             await bot.send_privmsg(
                 target=target,
-                message="Usage: note-add [text]"
+                message="Usage: note_add [text]"
             )
             return
 
