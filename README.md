@@ -73,6 +73,7 @@ Example (using default prefix `!`):
 - `!funfact [category]`
 - `!quote`
 - `!flip`
+- `!joke`
 
 ## Configuration
 

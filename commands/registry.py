@@ -39,12 +39,17 @@ COMMANDS = {
     },
     "quote": {
         "func": quote_command,
-        "description": "Returns a rando quote",
+        "description": "Returns a random quote",
         "usage": "quote"
     },
     "flip": {
         "func": flip_command,
         "description": "Flips a coin to be heads or tails.",
         "usage": "flip"
+    },
+    "joke": {
+        "func": joke_command,
+        "description": "Returns a random joke",
+        "usage": "joke"
     }
 }

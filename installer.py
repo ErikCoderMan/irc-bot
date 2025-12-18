@@ -37,7 +37,8 @@ DEFAULT_CONFIG = {
         "note_wipe": True,
         "funfact": True,
         "quote": True,
-        "flip": True
+        "flip": True,
+        "joke": True
     }
 }
 
