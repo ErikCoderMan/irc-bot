@@ -36,7 +36,8 @@ DEFAULT_CONFIG = {
         "note_read": True,
         "note_wipe": True,
         "funfact": True,
-        "quote": True
+        "quote": True,
+        "flip": True
     }
 }
 

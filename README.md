@@ -72,6 +72,7 @@ Example (using default prefix `!`):
 - `!note_wipe`
 - `!funfact [category]`
 - `!quote`
+- `!flip`
 
 ## Configuration
 

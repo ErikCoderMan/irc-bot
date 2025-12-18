@@ -4,6 +4,7 @@ from commands.note import note_command
 from commands.roll import roll_command
 from commands.funfact import funfact_command
 from commands.quote import quote_command
+from commands.flip import flip_command
 
 COMMANDS = {
     "help": {
@@ -40,5 +41,10 @@ COMMANDS = {
         "func": quote_command,
         "description": "Returns a rando quote",
         "usage": "quote"
+    },
+    "flip": {
+        "func": flip_command,
+        "description": "Flips a coin to be heads or tails.",
+        "usage": "flip"
     }
 }
