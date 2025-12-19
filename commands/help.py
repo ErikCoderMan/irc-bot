@@ -1,31 +1,41 @@
-from core.config import config, enabled_commands
+from core.config import enabled_commands
 
 async def help_command(bot, user, target, tokens=None):
     from commands.registry import COMMANDS
+
+    arg = tokens[1] if tokens and len(tokens) > 1 else None
     
-    arg = tokens[1] if len(tokens) > 1 else None
-    result = []
-
+    # Case: !help <command>
     if arg:
-        cmd_info = COMMANDS.get(arg)
-        if cmd_info and arg in enabled_commands:
-            usage = f"{bot.cmd_prefix}{cmd_info.get('usage', arg)}"
-            description = cmd_info.get("description", "")
-            result.append(f"{usage} - {description}")
-        else:
-            result.append(f"No info for command '{arg}' or command is disabled.")
-    else:
-        for cmd_name, cmd_info in COMMANDS.items():
-            if cmd_name in enabled_commands:
-                usage = f"{bot.cmd_prefix}{cmd_info.get('usage', cmd_name)}"
-                description = cmd_info.get("description", "")
-                result.append(f"{usage} - {description}")
-
-        if not result:
-            result.append("No commands are currently enabled.")
+        if arg not in enabled_commands or arg not in COMMANDS:
+            message = f"Unknown or disabled command: {arg}."
             
         else:
-            result.insert(0, f"List of available commands:")
+            cmd_info = COMMANDS[arg]
+            usage = f"{bot.cmd_prefix}{cmd_info.get('usage', arg)}"
+            description = cmd_info.get("description", "")
+            message = f"{usage} - {description}"
+            
+        await bot.send_privmsg(target=target, message=message)
 
-    for line in result:
-        await bot.send_privmsg(target=target, message=line)
+    # Case: !help
+    else:
+        commands = []
+
+        for cmd_name in sorted(enabled_commands):
+            if cmd_name in COMMANDS:
+                commands.append(f"{bot.cmd_prefix}{cmd_name}")
+
+        if not commands:
+            message = "No commands are currently enabled."
+            await bot.send_privmsg(target=target, message=message)
+            
+        else:
+            message = f"Available commands: {', '.join(commands)}"
+        
+            await bot.send_privmsg(target=target, message=message)
+            
+            await bot.send_privmsg(
+                target=target,
+                message=f"Use {bot.cmd_prefix}help [command] for more info on a specific command."
+            )
